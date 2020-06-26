@@ -32,6 +32,7 @@ CBUUID *blueGigaServiceUUID;
 CBUUID *hm10ServiceUUID;
 CBUUID *hc02ServiceUUID;
 CBUUID *hc02AdvUUID;
+CBUUID *imp006bServiceUUID;
 CBUUID *serialServiceUUID;
 CBUUID *readCharacteristicUUID;
 CBUUID *writeCharacteristicUUID;
@@ -218,8 +219,10 @@ CBUUID *writeCharacteristicUUID;
     hm10ServiceUUID = [CBUUID UUIDWithString:@HM10_SERVICE_UUID];
     hc02ServiceUUID = [CBUUID UUIDWithString:@HC02_SERVICE_UUID];
     hc02AdvUUID = [CBUUID UUIDWithString:@HC02_ADV_UUID];
+    imp006bServiceUUID = [CBUUID UUIDWithString:@IMP006B_SERVICE_UUID];
+
     NSArray *services = @[redBearLabsServiceUUID, adafruitServiceUUID, lairdServiceUUID, blueGigaServiceUUID, hm10ServiceUUID, 
-                        hc02AdvUUID];
+                        hc02AdvUUID, imp006bServiceUUID];
     [self.CM scanForPeripheralsWithServices:services options: nil];
 #else
     [self.CM scanForPeripheralsWithServices:nil options:nil]; // Start scanning
@@ -247,6 +250,14 @@ CBUUID *writeCharacteristicUUID;
     self.activePeripheral.delegate = self;
     [self.CM connectPeripheral:self.activePeripheral
                        options:[NSDictionary dictionaryWithObject:[NSNumber numberWithBool:YES] forKey:CBConnectPeripheralOptionNotifyOnDisconnectionKey]];
+}
+
+-(void) setBLEServiceData:(NSString *) serviceUUID txCharacteristicUUID:(NSString *)txCharacteristicUUID rxCharacteristicUUID:(NSString *)rxCharacteristicUUID
+{
+    //serialServiceUUID = [CBUUID UUIDWithString:serviceUUID ];
+    imp006bServiceUUID = [CBUUID UUIDWithString:serviceUUID ];
+    readCharacteristicUUID = [ CBUUID UUIDWithString:txCharacteristicUUID ];
+    writeCharacteristicUUID = [ CBUUID UUIDWithString:rxCharacteristicUUID ];
 }
 
 - (const char *) centralManagerStateToString: (int)state
@@ -481,9 +492,11 @@ CBUUID *writeCharacteristicUUID;
 
 - (void)centralManager:(CBCentralManager *)central didConnectPeripheral:(CBPeripheral *)peripheral
 {
-    if (peripheral.identifier != NULL)
+    if (peripheral.identifier != NULL) {
         NSLog(@"Connected to %@ successful", peripheral.identifier.UUIDString);
-    else
+        NSLog(@"Peripheral max write value %lu", [peripheral maximumWriteValueLengthForType:CBCharacteristicWriteWithoutResponse]);
+    } else
+
         NSLog(@"Connected to NULL successful");
 
     self.activePeripheral = peripheral;
@@ -569,8 +582,15 @@ static bool done = false;
                 readCharacteristicUUID = [CBUUID UUIDWithString:@HC02_CHAR_TX_UUID];
                 writeCharacteristicUUID = [CBUUID UUIDWithString:@HC02_CHAR_RX_UUID];
                 break;
+            } else if ([service.UUID isEqual:imp006bServiceUUID]) {
+                NSLog(@"Imp006B Bluetooth: %@", imp006bServiceUUID);
+                serialServiceUUID = imp006bServiceUUID;
+                //readCharacteristicUUID = [CBUUID UUIDWithString:@IMP006B_CHAR_TX_UUID];
+                //writeCharacteristicUUID = [CBUUID UUIDWithString:@IMP006B_CHAR_RX_UUID];
+                break;
             } else {
                 // ignore unknown services
+                  NSLog(@"Unknown service %@",service.UUID);
             }
         }
 

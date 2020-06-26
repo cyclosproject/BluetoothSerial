@@ -29,11 +29,6 @@
 
     [super pluginInitialize];
 
-    _bleShield = [[BLE alloc] init];
-    [_bleShield controlSetup];
-    [_bleShield setDelegate:self];
-
-    _buffer = [[NSMutableString alloc] init];
 }
 
 #pragma mark - Cordova Plugin Methods
@@ -41,8 +36,14 @@
 - (void)connect:(CDVInvokedUrlCommand *)command {
 
     NSLog(@"connect");
-    NSString *uuid = [command.arguments objectAtIndex:0];
-
+    NSString *args = [command.arguments objectAtIndex:0];
+    NSArray *items = [args componentsSeparatedByString:@","];
+    NSString *uuid = [items objectAtIndex:0];
+    NSString *service = [items objectAtIndex:1];
+    NSString *tx = [items objectAtIndex:2];
+    NSString *rx = [items objectAtIndex:3];
+    [ _bleShield setBLEServiceData:service txCharacteristicUUID:tx rxCharacteristicUUID:rx];
+    
     // if the uuid is null or blank, scan and
     // connect to the first available device
 
@@ -134,7 +135,7 @@
 }
 
 - (void)list:(CDVInvokedUrlCommand*)command {
-
+   
     [self scanForBLEPeripherals:3];
 
     [NSTimer scheduledTimerWithTimeInterval:(float)3.0
@@ -145,6 +146,13 @@
 }
 
 - (void)isEnabled:(CDVInvokedUrlCommand*)command {
+
+ 	// CYCLOS CUSTOMIZATION
+ 	// Moved from pluginInitialize to avoid requesting bluetooth permission at startup
+ 	_bleShield = [[BLE alloc] init];
+    [_bleShield controlSetup];
+    [_bleShield setDelegate:self];
+    _buffer = [[NSMutableString alloc] init];
 
     // short delay so CBCentralManger can spin up bluetooth
     [NSTimer scheduledTimerWithTimeInterval:(float)0.2
