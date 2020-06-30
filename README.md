@@ -1,3 +1,4 @@
+# We only use this fork for iOS (we patched). For Android we use the original one
 # Bluetooth Serial Plugin for PhoneGap
 
 This plugin enables serial communication over Bluetooth. It was written for communicating between Android or iOS and an Arduino.
